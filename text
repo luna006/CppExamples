@@ -1,0 +1,19 @@
+So guys, I was recently reviewing some pipelines in my work and found that we were making a big mistake when we used an input step.
+It is currently possible to use this Jenkins input to pause the execution 
+of a pipeline and ask the user if he wants to continue execution, or request any other user 
+information as a parameter, however, the pipeline is paused to interaction with the user.
+This strategy is used in some pipeline models, especially in the Trunk-Based Development.
+Following the Trunk-Based model, when we start a Job in Jenkins, the chosen (or pre-defined)
+ branch will be applied in all environments (stage, qa, prod) however, in our pipeline there 
+is a question if you really want to do deploy that branch in that particular environment (Input Step).
+Generally, and for good practice, every input step has a timeout (for cases where there is no 
+response from the user, Jenkins aborts the job execution automatically), and that time is generally used to perform some smoke testing to ensure approval.
+Here’s an example of an input step with timeout.
+Example: Let’s say the set timeout is 2 hours. The job has started and when deploying to QA 
+the team decides to do a test before approving for production. (Without thinking about the scenario where the user who started the job forgets to abort and the job is aborted by timeout).
+There’s the problem.
+When a Job is started in Jenkins, it starts an instance and all its integration is managed by an agent.
+When an agent is active, Jenkins is consuming resources from our cluster, which can lead to “queuing” 
+of jobs due to lack of resources.
+Therefore, while we wait for the user’s response, there is an agent locking resources 
+unnecessarily (which may disrupt other people who want to start their jobs).
